@@ -134,7 +134,7 @@ fn checkSha(self: GitRepoStep) !void {
         return;
 
     const result: union(enum) { failed: anyerror, output: []const u8 } = blk: {
-        const result = std.ChildProcess.exec(.{
+        const result = std.ChildProcess.run(.{
             .allocator = self.step.owner.allocator,
             .argv = &[_][]const u8{
                 "git",

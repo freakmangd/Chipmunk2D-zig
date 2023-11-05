@@ -37,8 +37,8 @@ pub fn build(b: *std.Build) void {
 pub fn addChipmunk(b: *std.Build, target: std.zig.CrossTarget, optimize: std.builtin.OptimizeMode) *std.Build.CompileStep {
     const cp_repo = GitRepoStep.create(b, .{
         .url = "https://github.com/slembcke/Chipmunk2D",
-        .branch = "Chipmunk-7.0.3",
-        .sha = "87340c216bf97554dc552371bbdecf283f7c540e",
+        .branch = "master",
+        .sha = "d0239ef4599b3688a5a336373f7d0a68426414ba",
     });
 
     const lib = b.addStaticLibrary(.{
