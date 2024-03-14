@@ -34,7 +34,7 @@ pub fn build(b: *std.Build) void {
     //test_step.dependOn(&run_main_tests.step);
 }
 
-pub fn addChipmunk(b: *std.Build, target: std.zig.CrossTarget, optimize: std.builtin.OptimizeMode) *std.Build.CompileStep {
+pub fn addChipmunk(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) *std.Build.Step.Compile {
     const cp_repo = GitRepoStep.create(b, .{
         .url = "https://github.com/slembcke/Chipmunk2D",
         .branch = "master",
@@ -50,7 +50,7 @@ pub fn addChipmunk(b: *std.Build, target: std.zig.CrossTarget, optimize: std.bui
     lib.step.dependOn(&cp_repo.step);
 
     lib.addIncludePath(.{
-        .path = chipPath(b, cp_repo, &.{"include"}),
+        .path = chipPath(b, &lib.step, cp_repo, &.{"include"}),
     });
 
     const c_flags_default = &.{
@@ -63,51 +63,55 @@ pub fn addChipmunk(b: *std.Build, target: std.zig.CrossTarget, optimize: std.bui
         "-DNDEBUG",
     };
 
-    const c_flags: []const []const u8 = if (optimize != .Debug) (std.mem.concat(b.allocator, []const u8, &.{ c_flags_default, c_flags_nondebug }) catch @panic("OOM")) else c_flags_default;
+    const c_flags: []const []const u8 = if (optimize != .Debug)
+        (std.mem.concat(b.allocator, []const u8, &.{ c_flags_default, c_flags_nondebug }) catch @panic("OOM"))
+    else
+        c_flags_default;
 
     lib.addCSourceFiles(.{
+        .root = .{ .path = cp_repo.path },
         .files = &.{
-            chipPath(b, cp_repo, &.{ "src", "chipmunk.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpArbiter.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpArray.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpBBTree.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpBody.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpCollision.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpConstraint.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpDampedRotarySpring.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpDampedSpring.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpGearJoint.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpGrooveJoint.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpHashSet.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpHastySpace.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpMarch.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpPinJoint.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpPivotJoint.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpPolyShape.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpPolyline.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpRatchetJoint.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpRobust.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpRotaryLimitJoint.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpShape.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpSimpleMotor.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpSlideJoint.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpSpace.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpSpaceComponent.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpSpaceDebug.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpSpaceHash.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpSpaceQuery.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpSpaceStep.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpSpatialIndex.c" }),
-            chipPath(b, cp_repo, &.{ "src", "cpSweep1D.c" }),
+            "src/chipmunk.c",
+            "src/cpArbiter.c",
+            "src/cpArray.c",
+            "src/cpBBTree.c",
+            "src/cpBody.c",
+            "src/cpCollision.c",
+            "src/cpConstraint.c",
+            "src/cpDampedRotarySpring.c",
+            "src/cpDampedSpring.c",
+            "src/cpGearJoint.c",
+            "src/cpGrooveJoint.c",
+            "src/cpHashSet.c",
+            "src/cpHastySpace.c",
+            "src/cpMarch.c",
+            "src/cpPinJoint.c",
+            "src/cpPivotJoint.c",
+            "src/cpPolyShape.c",
+            "src/cpPolyline.c",
+            "src/cpRatchetJoint.c",
+            "src/cpRobust.c",
+            "src/cpRotaryLimitJoint.c",
+            "src/cpShape.c",
+            "src/cpSimpleMotor.c",
+            "src/cpSlideJoint.c",
+            "src/cpSpace.c",
+            "src/cpSpaceComponent.c",
+            "src/cpSpaceDebug.c",
+            "src/cpSpaceHash.c",
+            "src/cpSpaceQuery.c",
+            "src/cpSpaceStep.c",
+            "src/cpSpatialIndex.c",
+            "src/cpSweep1D.c",
         },
         .flags = c_flags,
     });
 
-    lib.installHeadersDirectory(chipPath(b, cp_repo, &.{ "include", "chipmunk" }), "chipmunk");
+    lib.installHeadersDirectory(chipPath(b, &lib.step, cp_repo, &.{ "include", "chipmunk" }), "chipmunk");
 
     return lib;
 }
 
-fn chipPath(b: *std.Build, cp_repo: *GitRepoStep, comptime paths: []const []const u8) []u8 {
-    return std.fs.path.join(b.allocator, .{cp_repo.path} ++ paths) catch @panic("OOM");
+fn chipPath(b: *std.Build, step: *const std.Build.Step, cp_repo: *GitRepoStep, comptime paths: []const []const u8) []u8 {
+    return std.fs.path.join(b.allocator, .{cp_repo.getPath(step)} ++ paths) catch @panic("OOM");
 }
