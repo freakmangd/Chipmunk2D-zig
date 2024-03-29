@@ -17,7 +17,7 @@ pub const ShaCheck = enum {
             .warn => std.log.warn(fmt, args),
             .err => {
                 std.log.err(fmt, args);
-                std.os.exit(0xff);
+                std.process.exit(0xff);
             },
         }
     }
@@ -96,7 +96,7 @@ fn make(step: *std.Build.Step, prog_node: *std.Progress.Node) !void {
                 self.path,
                 self.sha,
             });
-            std.os.exit(1);
+            std.process.exit(1);
         }
 
         {
@@ -205,11 +205,11 @@ fn run(builder: *std.Build, argv: []const []const u8) !void {
     switch (result) {
         .Exited => |code| if (code != 0) {
             std.log.err("git clone failed with exit code {}", .{code});
-            std.os.exit(0xff);
+            std.process.exit(0xff);
         },
         else => {
             std.log.err("git clone failed with: {}", .{result});
-            std.os.exit(0xff);
+            std.process.exit(0xff);
         },
     }
 }
