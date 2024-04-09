@@ -68,7 +68,7 @@ pub fn build(b: *std.Build) void {
         .flags = c_flags,
     });
 
-    lib.installHeadersDirectory(cp_dep.path("include/chipmunk").getPath(b), "chipmunk");
+    lib.installHeadersDirectory(cp_dep.path("include/chipmunk"), "chipmunk");
 
     b.installArtifact(lib);
 
