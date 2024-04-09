@@ -2,5 +2,10 @@
     .name = "Chipmunk2D-zig",
     .version = "0.1.0",
     .paths = .{"."},
-    .dependencies = .{},
+    .dependencies = .{
+        .chipmunk2d = .{
+            .url = "https://github.com/slembcke/Chipmunk2D/archive/refs/heads/master.tar.gz",
+            .hash = "12200f769c0ad2fe71470907d9c0db0d5eb33aff71f70b829add79c0ca96dd42aa0a",
+        },
+    },
 }
